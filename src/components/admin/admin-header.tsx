@@ -5,6 +5,19 @@ import { LogOut, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
 
+/**
+ * Encerra a sessão e volta ao login pela ORIGEM ATUAL do navegador.
+ *
+ * Não usamos `signOut({ callbackUrl })` porque o NextAuth monta o destino no
+ * servidor a partir de NEXTAUTH_URL. Se essa variável estiver defasada (ex.:
+ * o domínio mudou e ainda não houve rebuild), o logout jogaria o usuário num
+ * domínio antigo/morto (404). Com `redirect: false` nós mesmos navegamos.
+ */
+async function sair() {
+  await signOut({ redirect: false });
+  window.location.href = "/admin/login";
+}
+
 export function AdminHeader({
   nome,
   email,
@@ -35,7 +48,7 @@ export function AdminHeader({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          onClick={sair}
         >
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline">Sair</span>
