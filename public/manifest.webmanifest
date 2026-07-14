@@ -1,0 +1,28 @@
+{
+  "name": "ADCESP Admin",
+  "short_name": "ADCESP Admin",
+  "description": "Painel administrativo da ADCESP — Secção Sindical dos Docentes da UESPI.",
+  "id": "/admin",
+  "start_url": "/admin/login",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d3b66",
+  "theme_color": "#0d3b66",
+  "lang": "pt-BR",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/logo_pwa.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo_pwa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

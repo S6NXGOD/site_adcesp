@@ -1,0 +1,546 @@
+// =====================================================================
+// ADCESP - Secção Sindical dos Docentes da UESPI
+// Prisma Schema - PostgreSQL
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// ENUMS
+// =====================================================================
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum TipoTransparencia {
+  PRESTACAO_CONTAS
+  ENCAMINHAMENTO_ASSEMBLEIA
+}
+
+enum StatusFiliado {
+  PENDENTE
+  APROVADO
+  REJEITADO
+}
+
+enum CampusUespi {
+  TERESINA_TORQUATO_NETO
+  TERESINA_CLOVIS_MOURA
+  PARNAIBA_ALEXANDRE_ALVES
+  PICOS_BARROS_ARAUJO
+  FLORIANO_JOSEFINA_DEMES
+  CAMPO_MAIOR_HEROIS_JENIPAPO
+  CORRENTE_JESUALDO_CAVALCANTI
+  OEIRAS_EDILBERTO_DINKELBORG
+  SAO_RAIMUNDO_NONATO_ARISTON_DIAS_LIMA
+  OUTRO
+}
+
+enum CentroUespi {
+  CCECA
+  CCN
+  CCHL
+  CCS
+  CTU
+  CCA
+  NAO_SE_APLICA
+}
+
+enum StatusDiretoria {
+  ATUAL
+  PASSADA
+}
+
+enum TipoCoordenacao {
+  ESTADUAL
+  REGIONAL
+}
+
+enum StatusEleicao {
+  AGUARDANDO
+  EM_ANDAMENTO
+  CONCLUIDO
+}
+
+enum TipoServico {
+  ESPACO_JURIDICO
+  PARCERIA_SESC
+  ESPACO_LAZER
+  PLANO_SAUDE
+  ARTIGOS
+}
+
+enum StatusArtigo {
+  RASCUNHO
+  PUBLICADO
+}
+
+enum StatusClipping {
+  RASCUNHO
+  PUBLICADO
+}
+
+// =====================================================================
+// AUTENTICAÇÃO / USUÁRIOS
+// =====================================================================
+
+model Usuario {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senha     String // hash bcrypt
+  role      Role     @default(EDITOR)
+  ativo     Boolean  @default(true)
+  // Módulos do painel que o usuário (EDITOR) pode acessar. ADMIN acessa tudo.
+  modulos   String[] @default([])
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  // Auditoria de conteúdo
+  noticias       Noticia[]
+  eventos        Evento[]
+  transparencias Transparencia[]
+
+  @@map("usuarios")
+}
+
+// =====================================================================
+// NOTÍCIAS / IMPRENSA
+// =====================================================================
+
+model Noticia {
+  id             String   @id @default(cuid())
+  titulo         String
+  resumo         String   @db.Text // texto exibido abaixo da imagem de destaque
+  conteudo       String   @db.Text // Rich Text (HTML) — corpo principal
+  slug           String   @unique
+  imagemCapa     String? // imagem de destaque (upload)
+  autoria        String   @default("ASCOM ADCESP") // assinatura exibida
+  dataPublicacao DateTime @default(now())
+  publicado      Boolean  @default(true) // false = rascunho
+
+  // Carrossel da home (máx. 5). destaqueEm marca quando entrou no slide (FIFO).
+  destaque   Boolean   @default(false)
+  destaqueEm DateTime?
+
+  // Anexos (upload). galeria: string[] de URLs (ordenadas).
+  // documentos: [{ url, nome }].
+  galeria    Json?
+  documentos Json?
+
+  categorias Categoria[] @relation("NoticiaCategorias")
+
+  autorId String?
+  autor   Usuario? @relation(fields: [autorId], references: [id], onDelete: SetNull)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([slug])
+  @@index([dataPublicacao])
+  @@index([destaque, destaqueEm])
+  @@map("noticias")
+}
+
+model Categoria {
+  id       String    @id @default(cuid())
+  nome     String    @unique
+  slug     String    @unique
+  cor      String? // hex opcional para o badge
+  noticias Noticia[] @relation("NoticiaCategorias")
+
+  criadoEm DateTime @default(now())
+
+  @@map("categorias")
+}
+
+// =====================================================================
+// SAIU NA IMPRENSA (clipping de matérias em veículos externos)
+// =====================================================================
+
+model ClippingImprensa {
+  id                String         @id @default(uuid())
+  titulo            String
+  urlExterna        String         @map("url_externa") // link da matéria no veículo externo
+  nomeVeiculo       String         @map("nome_veiculo") // ex: "G1 PI", "Portal Cidade Verde"
+  dataPublicacao    DateTime       @map("data_publicacao")
+  caminhoImagemCapa String?        @map("caminho_imagem_capa") // thumbnail opcional
+  status            StatusClipping @default(RASCUNHO)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status, dataPublicacao])
+  @@map("clippings_imprensa")
+}
+
+// =====================================================================
+// EVENTOS
+// =====================================================================
+
+model Evento {
+  id            String   @id @default(cuid())
+  titulo        String
+  slug          String   @unique
+  descricao     String   @db.Text
+  dataInicio    DateTime
+  dataFim       DateTime?
+  local         String?
+  imagem        String?
+  linkInscricao String?
+  publicado     Boolean  @default(true)
+
+  autorId String?
+  autor   Usuario? @relation(fields: [autorId], references: [id], onDelete: SetNull)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([dataInicio])
+  @@map("eventos")
+}
+
+// =====================================================================
+// TRANSPARÊNCIA (documentos PDF)
+// =====================================================================
+
+model Transparencia {
+  id            String            @id @default(cuid())
+  tipo          TipoTransparencia
+  titulo        String
+  descricao     String?           @db.Text
+  arquivoUrl    String // caminho/URL do PDF
+  dataDocumento DateTime
+
+  autorId String?
+  autor   Usuario? @relation(fields: [autorId], references: [id], onDelete: SetNull)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([tipo])
+  @@index([dataDocumento])
+  @@map("transparencia")
+}
+
+// =====================================================================
+// FILIAÇÃO
+// =====================================================================
+
+model Filiado {
+  id             String   @id @default(cuid())
+  // Dados pessoais
+  nome           String
+  rg             String
+  cpf            String   @unique
+  dataNascimento DateTime
+  matricula      String?
+  curso          String?
+
+  // Endereço
+  endereco String
+  numero   String?
+  apto     String?
+  cep      String
+  cidade   String
+  estado   String
+
+  // Contato
+  telefone String?
+  celular  String
+  email    String
+
+  // Vínculo UESPI
+  campus CampusUespi
+  centro CentroUespi
+
+  // Caminhos dos arquivos físicos anexados no servidor (armazenamento privado)
+  caminhoArquivoFicha          String?
+  caminhoArquivoIdentificacao  String? // documento de identificação (CNH, RG, CPF, passaporte...)
+  caminhoArquivoContracheque   String?
+
+  // Consentimentos obrigatórios
+  aceiteContribuicao Boolean @default(false) // contribuição confederativa (CF/88, Art. 8º, IV)
+  consentimentoLgpd  Boolean @default(false) // LGPD (Lei nº 13.709/2018)
+
+  // Moderação
+  status       StatusFiliado @default(PENDENTE)
+  observacoes  String?       @db.Text // motivo de aprovação/rejeição
+  dataFiliacao DateTime      @default(now())
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status])
+  @@map("filiados")
+}
+
+// =====================================================================
+// QUEM SOMOS - HISTÓRICO DE DIRETORIAS
+// =====================================================================
+
+model DiretoriaHistorico {
+  id        String          @id @default(cuid())
+  gestao    String // ex: "2024-2026"
+  status    StatusDiretoria @default(PASSADA)
+  descricao String?         @db.Text
+  // Mapeamento de cargos -> nome do professor
+  // ex: [{ "cargo": "Coordenador Geral", "nome": "Prof. Fulano", "foto": "..." }]
+  cargosJson Json
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("diretorias_historico")
+}
+
+// =====================================================================
+// QUEM SOMOS - COORDENAÇÕES (Estadual e Regionais)
+// =====================================================================
+
+model Coordenacao {
+  id         String          @id @default(cuid())
+  tipo       TipoCoordenacao
+  nomeRegiao String? // se REGIONAL, ex: "Campus Teresina", "Campus Parnaíba"
+  descricao  String?         @db.Text
+  // Lista de membros: [{ "cargo": "...", "nome": "...", "foto": "...", "email": "..." }]
+  membrosJson Json
+  ordem       Int            @default(0)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([tipo])
+  @@map("coordenacoes")
+}
+
+// =====================================================================
+// SERVIÇOS (conteúdo dos submenus)
+// =====================================================================
+
+model Servico {
+  id        String      @id @default(cuid())
+  tipo      TipoServico @unique
+  titulo    String
+  slug      String      @unique
+  resumo    String?     @db.Text
+  conteudo  String      @db.Text // Rich Text (HTML)
+  imagem    String?
+  videoUrl  String? // URL de vídeo opcional (YouTube)
+  publicado Boolean     @default(true)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("servicos")
+}
+
+// =====================================================================
+// ARTIGOS (autoria dos professores)
+// =====================================================================
+
+model Artigo {
+  id                String       @id @default(cuid())
+  titulo            String
+  slug              String       @unique
+  resumo            String       @db.Text
+  conteudo          String       @db.Text // Rich Text (HTML)
+  caminhoImagemCapa String? // capa do artigo (upload)
+  dataPublicacao    DateTime     @default(now())
+  status            StatusArtigo @default(RASCUNHO)
+  autorNome         String
+  caminhoFotoAutor  String? // foto do professor autor (upload)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status])
+  @@index([slug])
+  @@index([dataPublicacao])
+  @@map("artigos")
+}
+
+// =====================================================================
+// ELEIÇÕES
+// =====================================================================
+
+model Eleicao {
+  id          String        @id @default(cuid())
+  titulo      String // Ex: "Eleições Biênio 2024/2026"
+  slug        String        @unique // Ex: "2024-2026"
+  descricao   String?       @db.Text // texto introdutório
+  status      StatusEleicao @default(AGUARDANDO)
+  // Cronograma opcional: [{ "data": "2026-03-01", "evento": "Abertura das inscrições" }]
+  calendarioJson Json?
+
+  documentos DocumentoEleicao[]
+  comissao   MembroComissaoEleitoral[]
+  chapas     Chapa[]
+  resultado  ResultadoEleicao?
+
+  criadoEm     DateTime @default(now()) // data de criação
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status])
+  @@map("eleicoes")
+}
+
+model DocumentoEleicao {
+  id             String   @id @default(cuid())
+  eleicaoId      String
+  eleicao        Eleicao  @relation(fields: [eleicaoId], references: [id], onDelete: Cascade)
+  titulo         String // Ex: "Edital de Convocação", "Regulamento da Eleição"
+  caminhoArquivo String // caminho/URL do PDF
+  ordem          Int      @default(0)
+  dataPublicacao DateTime @default(now())
+
+  criadoEm DateTime @default(now())
+
+  @@index([eleicaoId])
+  @@map("documentos_eleicao")
+}
+
+model MembroComissaoEleitoral {
+  id        String  @id @default(cuid())
+  eleicaoId String
+  eleicao   Eleicao @relation(fields: [eleicaoId], references: [id], onDelete: Cascade)
+  nome      String // Ex: "Marcelo Regis"
+  cargo     String // Ex: "Presidente", "Mesário"
+  ordem     Int     @default(0)
+
+  criadoEm DateTime @default(now())
+
+  @@index([eleicaoId])
+  @@map("membros_comissao_eleitoral")
+}
+
+model Chapa {
+  id        String  @id @default(cuid())
+  eleicaoId String
+  eleicao   Eleicao @relation(fields: [eleicaoId], references: [id], onDelete: Cascade)
+
+  nome    String
+  numero  Int
+  slogan  String?
+  logoUrl String?
+
+  candidatos CandidatoEleicao[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([eleicaoId, numero])
+  @@index([eleicaoId])
+  @@map("chapas")
+}
+
+model CandidatoEleicao {
+  id      String @id @default(cuid())
+  chapaId String
+  chapa   Chapa  @relation(fields: [chapaId], references: [id], onDelete: Cascade)
+
+  nome  String
+  cargo String // ex: "Coordenador Estadual", "Coordenador Regional - Teresina"
+  fotoUrl String?
+  ordem   Int    @default(0)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([chapaId])
+  @@map("candidatos_eleicao")
+}
+
+model ResultadoEleicao {
+  id        String  @id @default(cuid())
+  eleicaoId String  @unique
+  eleicao   Eleicao @relation(fields: [eleicaoId], references: [id], onDelete: Cascade)
+
+  // Chapa vencedora (opcional caso anulada)
+  chapaVencedoraId String?
+
+  // Mapa de votos por chapa: [{ "chapaId": "...", "nome": "...", "numero": 1, "votos": 120 }]
+  votosChapasJson Json
+  votosBrancos    Int @default(0)
+  votosNulos      Int @default(0)
+  totalAptos      Int @default(0)
+  totalVotantes   Int @default(0)
+
+  apuradoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("resultados_eleicao")
+}
+
+// =====================================================================
+// CONFIGURAÇÕES DO SITE
+// =====================================================================
+
+// Pop-ups de imagem exibidos na abertura do site. Vários podem ser
+// cadastrados; apenas um fica ativo por vez.
+model Popup {
+  id            String   @id @default(cuid())
+  titulo        String // referência interna (não exibida ao público)
+  imagem        String // arte do pop-up (upload) — obrigatória
+  linkUrl       String? // link ao clicar na imagem (opcional)
+  tempoExibicao Int      @default(0) // segundos; 0 = fechar manualmente (X)
+  ativo         Boolean  @default(false)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("popups")
+}
+
+// Setores do botão flutuante de contato (WhatsApp).
+model ContatoWhatsapp {
+  id       String  @id @default(cuid())
+  setor    String // ex: "Jurídico", "Demais Serviços"
+  numero   String // ex: "(86) 99930-4466"
+  mensagem String? // mensagem pré-preenchida no WhatsApp
+  ordem    Int     @default(0)
+  ativo    Boolean @default(true)
+
+  criadoEm DateTime @default(now())
+
+  @@map("contatos_whatsapp")
+}
+
+// Página institucional "Quem Somos" (registro único / singleton).
+model PaginaInstitucional {
+  id             String   @id @default("singleton")
+  quemSomosTexto String   @db.Text // Rich Text (HTML)
+  quemSomosVideoUrl String? // URL de vídeo opcional na página Quem Somos
+
+  // Seção "Nossa História" da página inicial (editável)
+  historiaTexto    String? @db.Text // Rich Text (HTML)
+  historiaVideoUrl String? // URL de vídeo (YouTube) OU
+  historiaImagem   String? // imagem (upload) — usada quando não há vídeo
+
+  atualizadoEm DateTime @updatedAt @default(now()) // data_atualizacao
+
+  @@map("pagina_institucional")
+}
+
+// Vídeos exibidos no carrossel da home e na página /videos (alimentados pelo admin).
+model Video {
+  id        String   @id @default(cuid())
+  titulo    String
+  descricao String?  @db.Text
+  url       String // URL do YouTube (ou embed)
+  ordem     Int      @default(0)
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  @@index([ativo, ordem])
+  @@map("videos")
+}
