@@ -50,7 +50,7 @@ export async function salvarCoordenacao(
   }
 
   revalidatePath("/admin/coordenacoes");
-  revalidatePath("/quem-somos");
+  revalidatePath("/coordenacoes");
   return { success: true, message: "Coordenação salva com sucesso." };
 }
 
@@ -58,7 +58,7 @@ export async function excluirCoordenacao(id: string): Promise<ActionResult> {
   await requireAuth();
   await prisma.coordenacao.delete({ where: { id } });
   revalidatePath("/admin/coordenacoes");
-  revalidatePath("/quem-somos");
+  revalidatePath("/coordenacoes");
   return { success: true, message: "Coordenação removida." };
 }
 
