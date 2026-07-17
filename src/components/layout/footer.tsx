@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from "lucide-react";
-import { mainNav, siteConfig } from "@/lib/site";
+import { allNavLinks, siteConfig } from "@/lib/site";
 import { Logo } from "@/components/layout/logo";
 
 export function Footer() {
@@ -19,7 +19,7 @@ export function Footer() {
             Navegação
           </h3>
           <ul className="space-y-2 text-sm">
-            {mainNav.map((item) => (
+            {allNavLinks.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}

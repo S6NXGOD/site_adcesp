@@ -15,33 +15,100 @@ export const siteConfig = {
   },
 };
 
+// ---------------------------------------------------------------------
 // Menu principal do portal público
-export const mainNav: {
-  title: string;
-  href: string;
-  children?: { title: string; href: string }[];
-}[] = [
-  { title: "Início", href: "/" },
-  { title: "Quem Somos", href: "/quem-somos" },
-  { title: "Coordenações", href: "/coordenacoes" },
-  { title: "Notícias", href: "/noticias" },
-  { title: "Saiu na Imprensa", href: "/saiu-na-imprensa" },
-  { title: "Artigos", href: "/artigos" },
-  { title: "Vídeos", href: "/videos" },
-  { title: "Transparência", href: "/transparencia" },
-  { title: "Eventos", href: "/eventos" },
+// Organizado por intenção do usuário: 5 categorias + CTA.
+// Os `href` refletem as rotas que existem de fato (ver servicoSlugToTipo).
+// ---------------------------------------------------------------------
+export type NavLink = { title: string; href: string; descricao?: string };
+export type NavEntry =
+  | NavLink
+  | { title: string; children: NavLink[] };
+
+export function isGrupo(
+  item: NavEntry
+): item is { title: string; children: NavLink[] } {
+  return "children" in item;
+}
+
+export const mainNav: NavEntry[] = [
   {
-    title: "Serviços",
-    href: "/servicos",
+    title: "O Sindicato",
     children: [
-      { title: "Espaço Jurídico", href: "/servicos/espaco-juridico" },
-      { title: "Parceria com SESC", href: "/servicos/parceria-sesc" },
-      { title: "Espaço de Lazer", href: "/servicos/espaco-lazer" },
-      { title: "Plano de Saúde", href: "/servicos/plano-saude" },
+      {
+        title: "Quem Somos",
+        href: "/quem-somos",
+        descricao: "História, princípios e atuação da ADCESP.",
+      },
+      {
+        title: "Coordenações",
+        href: "/coordenacoes",
+        descricao: "Coordenação estadual e regionais.",
+      },
+      {
+        title: "Eleições",
+        href: "/eleicoes",
+        descricao: "Editais, chapas, comissão e apuração.",
+      },
     ],
   },
-  { title: "Eleições", href: "/eleicoes" },
+  {
+    title: "Comunicação",
+    children: [
+      {
+        title: "Notícias",
+        href: "/noticias",
+        descricao: "Ações, conquistas e mobilizações.",
+      },
+      {
+        title: "Artigos",
+        href: "/artigos",
+        descricao: "Produção autoral dos docentes.",
+      },
+      {
+        title: "Saiu na Imprensa",
+        href: "/saiu-na-imprensa",
+        descricao: "A ADCESP nos veículos de comunicação.",
+      },
+      { title: "Vídeos", href: "/videos", descricao: "Canal e coberturas." },
+    ],
+  },
+  {
+    title: "Serviços",
+    children: [
+      {
+        title: "Espaço Jurídico",
+        href: "/servicos/espaco-juridico",
+        descricao: "Assessoria jurídica aos filiados.",
+      },
+      {
+        title: "Plano de Saúde",
+        href: "/servicos/plano-saude",
+        descricao: "Condições especiais para a categoria.",
+      },
+      {
+        title: "Parceria com SESC",
+        href: "/servicos/parceria-sesc",
+        descricao: "Benefícios em lazer, cultura e esporte.",
+      },
+      {
+        title: "Espaço de Lazer",
+        href: "/servicos/espaco-lazer",
+        descricao: "Estrutura para filiados e familiares.",
+      },
+    ],
+  },
+  { title: "Transparência", href: "/transparencia" },
+  { title: "Eventos", href: "/eventos" },
 ];
+
+/** Botão de ação em destaque da Navbar. */
+export const navCta: NavLink = { title: "Filie-se", href: "/filiacao" };
+
+/** Todos os links do menu, achatados (usado no rodapé e no sitemap). */
+export const allNavLinks: NavLink[] = mainNav.flatMap((i) =>
+  isGrupo(i) ? i.children : [i]
+);
 
 // Mapeia o slug do submenu de serviços -> enum TipoServico
 export const servicoSlugToTipo: Record<string, string> = {
