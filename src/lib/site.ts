@@ -11,7 +11,7 @@ export const siteConfig = {
   social: {
     instagram: "https://instagram.com/adcesp",
     facebook: "https://facebook.com/adcesp",
-    youtube: "https://youtube.com/@adcesp",
+    youtube: "https://www.youtube.com/@TVADCESP",
   },
 };
 
