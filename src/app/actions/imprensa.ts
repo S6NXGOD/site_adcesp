@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { clippingSchema, type ClippingInput } from "@/lib/validations";
+import { dataDeInput } from "@/lib/utils";
 import { requireAuth, type ActionResult } from "@/lib/action-helpers";
 
 function revalidar() {
@@ -16,7 +17,7 @@ function toData(d: ClippingInput) {
     titulo: d.titulo,
     urlExterna: d.urlExterna,
     nomeVeiculo: d.nomeVeiculo,
-    dataPublicacao: new Date(d.dataPublicacao),
+    dataPublicacao: dataDeInput(d.dataPublicacao),
     caminhoImagemCapa: d.caminhoImagemCapa || null,
     status: d.status,
   };

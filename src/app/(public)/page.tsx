@@ -90,6 +90,39 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ÚLTIMAS NOTÍCIAS (logo após o carrossel) */}
+      <section className="bg-slate-50 py-16">
+        <div className="container">
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-900">
+                Últimas Notícias
+              </h2>
+              <p className="mt-1 text-muted-foreground">
+                Fique por dentro das ações e mobilizações da categoria.
+              </p>
+            </div>
+            <Button asChild variant="ghost" className="hidden sm:flex">
+              <Link href="/noticias">
+                Ver todas <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {noticias.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-3">
+              {noticias.map((n) => (
+                <NoticiaCard key={n.id} noticia={n} />
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-lg border border-dashed bg-white p-10 text-center text-muted-foreground">
+              Nenhuma notícia publicada ainda.
+            </p>
+          )}
+        </div>
+      </section>
+
       {/* HISTÓRICO */}
       <section className="container py-16">
         <div className="grid items-center gap-10 md:grid-cols-2">
@@ -165,39 +198,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-      {/* DESTAQUES DE NOTÍCIAS */}
-      <section className="bg-slate-50 py-16">
-        <div className="container">
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-900">
-                Últimas Notícias
-              </h2>
-              <p className="mt-1 text-muted-foreground">
-                Fique por dentro das ações e mobilizações da categoria.
-              </p>
-            </div>
-            <Button asChild variant="ghost" className="hidden sm:flex">
-              <Link href="/noticias">
-                Ver todas <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-
-          {noticias.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-3">
-              {noticias.map((n) => (
-                <NoticiaCard key={n.id} noticia={n} />
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-lg border border-dashed bg-white p-10 text-center text-muted-foreground">
-              Nenhuma notícia publicada ainda.
-            </p>
-          )}
-        </div>
-      </section>
 
       {/* PRÓXIMOS EVENTOS */}
       <section className="container py-16">

@@ -59,6 +59,38 @@ export function slugifyUrl(text: string, max = SLUG_MAX): string {
 }
 
 /** Formata data para pt-BR (dd/mm/aaaa). */
+// ---------------------------------------------------------------------
+// Datas "só dia" (sem hora) — ex.: data de publicação.
+//
+// Cuidado com fuso: `new Date().toISOString()` converte para UTC, então às
+// 22h no Brasil (UTC-3) ele já devolve o dia SEGUINTE. E `new Date("2026-07-16")`
+// é interpretado como meia-noite UTC, que no Brasil é dia 15 às 21h.
+//
+// Solução: no formulário usamos o dia LOCAL, e gravamos ao MEIO-DIA UTC —
+// horário que cai no mesmo dia em qualquer fuso entre UTC-11 e UTC+11.
+// ---------------------------------------------------------------------
+
+/** Dia de hoje no fuso do usuário, como "yyyy-mm-dd". */
+export function hojeLocal(): string {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+/** Converte um Date gravado no banco para "yyyy-mm-dd" (para o input date). */
+export function paraInputDate(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toISOString().slice(0, 10);
+}
+
+/** "yyyy-mm-dd" -> Date ao meio-dia UTC (estável em qualquer fuso). */
+export function dataDeInput(valor: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor.trim());
+  if (!m) return new Date();
+  return new Date(`${m[1]}-${m[2]}-${m[3]}T12:00:00.000Z`);
+}
+
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat("pt-BR", {

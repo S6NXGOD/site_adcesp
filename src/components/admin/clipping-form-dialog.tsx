@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, paraInputDate, hojeLocal } from "@/lib/utils";
 import { clippingSchema, type ClippingInput } from "@/lib/validations";
 import { criarClipping, atualizarClipping } from "@/app/actions/imprensa";
 
@@ -30,7 +30,7 @@ type Clipping = {
 };
 
 function toDateInput(d?: Date) {
-  return d ? new Date(d).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+  return d ? paraInputDate(d) : hojeLocal();
 }
 
 export function ClippingFormDialog({ clipping }: { clipping?: Clipping }) {

@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/utils";
-import { savePublicFile } from "@/lib/uploads";
+import { slugifyUrl, dataDeInput } from "@/lib/utils";
 import { requireAuth, type ActionResult } from "@/lib/action-helpers";
 import { StatusArtigo } from "@prisma/client";
 
@@ -44,29 +43,14 @@ export async function salvarArtigo(
   if (!autorNome)
     return { success: false, error: "Informe o nome do autor." };
 
-  // Uploads das imagens (só substitui se um novo arquivo for enviado).
-  let caminhoImagemCapa =
-    String(formData.get("caminhoImagemCapaAtual") ?? "").trim() || null;
-  let caminhoFotoAutor =
-    String(formData.get("caminhoFotoAutorAtual") ?? "").trim() || null;
+  // As imagens já foram recortadas e enviadas pelo ImageCropUpload; aqui só
+  // chegam os caminhos resultantes (ou vazio, se removidas).
+  const caminhoImagemCapa =
+    String(formData.get("caminhoImagemCapa") ?? "").trim() || null;
+  const caminhoFotoAutor =
+    String(formData.get("caminhoFotoAutor") ?? "").trim() || null;
 
-  try {
-    const capa = formData.get("capaFile");
-    if (capa instanceof File && capa.size > 0) {
-      caminhoImagemCapa = await savePublicFile(capa);
-    }
-    const foto = formData.get("fotoAutorFile");
-    if (foto instanceof File && foto.size > 0) {
-      caminhoFotoAutor = await savePublicFile(foto);
-    }
-  } catch (e) {
-    return {
-      success: false,
-      error: e instanceof Error ? e.message : "Falha no upload das imagens.",
-    };
-  }
-
-  const slug = await uniqueSlug(slugify(slugInput || titulo), id);
+  const slug = await uniqueSlug(slugifyUrl(slugInput || titulo), id);
 
   const data = {
     titulo,
@@ -77,7 +61,7 @@ export async function salvarArtigo(
     autorNome,
     caminhoImagemCapa,
     caminhoFotoAutor,
-    dataPublicacao: dataRaw ? new Date(dataRaw) : new Date(),
+    dataPublicacao: dataRaw ? dataDeInput(dataRaw) : new Date(),
   };
 
   if (id) {

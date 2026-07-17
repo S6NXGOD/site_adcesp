@@ -3,14 +3,15 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Save, ArrowLeft, ImageIcon, UserRound } from "lucide-react";
+import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { TiptapEditor } from "@/components/admin/tiptap-editor";
-import { slugify } from "@/lib/utils";
+import { ImageCropUpload } from "@/components/admin/image-crop-upload";
+import { slugifyUrl, SLUG_MAX, hojeLocal } from "@/lib/utils";
 import { salvarArtigo } from "@/app/actions/artigos";
 
 export type ArtigoFormData = {
@@ -26,53 +27,6 @@ export type ArtigoFormData = {
   dataPublicacao: string; // yyyy-mm-dd
 };
 
-/** Input de imagem (arquivo físico) com pré-visualização. */
-function ImageFileInput({
-  name,
-  label,
-  currentUrl,
-  circular,
-}: {
-  name: string;
-  label: string;
-  currentUrl?: string | null;
-  circular?: boolean;
-}) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const shown = preview ?? currentUrl ?? null;
-  const Icon = circular ? UserRound : ImageIcon;
-
-  return (
-    <div>
-      <Label>{label}</Label>
-      <div className="mt-1 flex items-center gap-3">
-        <div
-          className={`flex shrink-0 items-center justify-center overflow-hidden border bg-slate-100 text-slate-400 ${
-            circular ? "h-16 w-16 rounded-full" : "h-16 w-24 rounded-lg"
-          }`}
-        >
-          {shown ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={shown} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <Icon className="h-6 w-6" />
-          )}
-        </div>
-        <input
-          type="file"
-          name={name}
-          accept="image/*"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            setPreview(f ? URL.createObjectURL(f) : null);
-          }}
-          className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
-        />
-      </div>
-    </div>
-  );
-}
-
 export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
   const router = useRouter();
   const editing = !!artigo;
@@ -82,11 +36,19 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
   const [slug, setSlug] = useState(artigo?.slug ?? "");
   const [slugEditado, setSlugEditado] = useState(editing);
   const [conteudo, setConteudo] = useState(artigo?.conteudo ?? "");
+  // As imagens são recortadas e enviadas pelo ImageCropUpload, que devolve a
+  // URL final — o formulário só carrega esse caminho.
+  const [capa, setCapa] = useState(artigo?.caminhoImagemCapa ?? "");
+  const [fotoAutor, setFotoAutor] = useState(artigo?.caminhoFotoAutor ?? "");
+
+  const slugFinal = slugifyUrl(slug || titulo);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set("conteudo", conteudo);
+    fd.set("caminhoImagemCapa", capa);
+    fd.set("caminhoFotoAutor", fotoAutor);
     startTransition(async () => {
       const res = await salvarArtigo(fd, artigo?.id);
       if (res.success) {
@@ -112,18 +74,6 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
         </h1>
       </div>
 
-      {/* Campos ocultos com os caminhos atuais (preservados se não trocar) */}
-      <input
-        type="hidden"
-        name="caminhoImagemCapaAtual"
-        defaultValue={artigo?.caminhoImagemCapa ?? ""}
-      />
-      <input
-        type="hidden"
-        name="caminhoFotoAutorAtual"
-        defaultValue={artigo?.caminhoFotoAutor ?? ""}
-      />
-
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         {/* Coluna principal */}
         <div className="space-y-5">
@@ -137,27 +87,34 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
                   value={titulo}
                   onChange={(e) => {
                     setTitulo(e.target.value);
-                    if (!slugEditado) setSlug(slugify(e.target.value));
+                    if (!slugEditado) setSlug(slugifyUrl(e.target.value));
                   }}
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="slug">Slug (URL)</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="slug">Endereço do artigo (URL)</Label>
+                <Input
+                  id="slug"
+                  name="slug"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setSlugEditado(true);
+                  }}
+                  placeholder="gerado-a-partir-do-titulo"
+                />
+                <div className="mt-1.5 rounded-md bg-slate-50 px-2.5 py-1.5">
                   <span className="text-xs text-muted-foreground">
                     /artigos/
                   </span>
-                  <Input
-                    id="slug"
-                    name="slug"
-                    value={slug}
-                    onChange={(e) => {
-                      setSlug(e.target.value);
-                      setSlugEditado(true);
-                    }}
-                  />
+                  <span className="break-all text-xs font-medium text-primary">
+                    {slugFinal || "..."}
+                  </span>
                 </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {slugFinal.length}/{SLUG_MAX} caracteres.
+                </p>
               </div>
               <div>
                 <Label htmlFor="resumo">Resumo *</Label>
@@ -203,10 +160,7 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
                   id="dataPublicacao"
                   name="dataPublicacao"
                   type="date"
-                  defaultValue={
-                    artigo?.dataPublicacao ??
-                    new Date().toISOString().slice(0, 10)
-                  }
+                  defaultValue={artigo?.dataPublicacao ?? hojeLocal()}
                 />
               </div>
             </div>
@@ -216,10 +170,12 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
             <h2 className="mb-3 font-semibold text-slate-900">
               Imagem de capa
             </h2>
-            <ImageFileInput
-              name="capaFile"
+            <ImageCropUpload
               label="Capa do artigo"
-              currentUrl={artigo?.caminhoImagemCapa}
+              value={capa}
+              onChange={setCapa}
+              aspect={1200 / 630}
+              recomendacao="Recomendado: 1200 × 630 px (1.91:1) — mesmo formato usado no compartilhamento."
             />
           </section>
 
@@ -236,11 +192,12 @@ export function ArtigoForm({ artigo }: { artigo?: ArtigoFormData }) {
                   required
                 />
               </div>
-              <ImageFileInput
-                name="fotoAutorFile"
+              <ImageCropUpload
                 label="Foto do autor"
-                currentUrl={artigo?.caminhoFotoAutor}
-                circular
+                value={fotoAutor}
+                onChange={setFotoAutor}
+                aspect={1}
+                recomendacao="Recomendado: 400 × 400 px (quadrada) — exibida em círculo."
               />
             </div>
           </section>

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ArtigoForm, type ArtigoFormData } from "@/components/admin/artigo-form";
+import { paraInputDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function EditarArtigoPage({
     autorNome: artigo.autorNome,
     caminhoImagemCapa: artigo.caminhoImagemCapa,
     caminhoFotoAutor: artigo.caminhoFotoAutor,
-    dataPublicacao: new Date(artigo.dataPublicacao).toISOString().slice(0, 10),
+    dataPublicacao: paraInputDate(artigo.dataPublicacao),
   };
 
   return <ArtigoForm artigo={dto} />;

@@ -5,6 +5,7 @@ import {
   type NoticiaFormData,
 } from "@/components/admin/noticia-form";
 import type { DocumentoAnexo } from "@/components/admin/media-uploads";
+import { paraInputDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function EditarNoticiaPage({
     resumo: noticia.resumo,
     conteudo: noticia.conteudo,
     imagemCapa: noticia.imagemCapa,
-    dataPublicacao: new Date(noticia.dataPublicacao).toISOString().slice(0, 10),
+    dataPublicacao: paraInputDate(noticia.dataPublicacao),
     publicado: noticia.publicado,
     destaque: noticia.destaque,
     galeria: (noticia.galeria as unknown as string[]) ?? [],

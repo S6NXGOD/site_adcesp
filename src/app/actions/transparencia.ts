@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { transparenciaSchema } from "@/lib/validations";
 import { requireAuth, type ActionResult } from "@/lib/action-helpers";
+import { dataDeInput } from "@/lib/utils";
 import { TipoTransparencia } from "@prisma/client";
 
 function parseForm(formData: FormData) {
@@ -36,7 +37,7 @@ export async function criarDocumento(
       titulo: d.titulo,
       descricao: d.descricao || null,
       arquivoUrl: d.arquivoUrl,
-      dataDocumento: new Date(d.dataDocumento),
+      dataDocumento: dataDeInput(d.dataDocumento),
       autorId: session.user.id,
     },
   });
@@ -68,7 +69,7 @@ export async function atualizarDocumento(
       titulo: d.titulo,
       descricao: d.descricao || null,
       arquivoUrl: d.arquivoUrl,
-      dataDocumento: new Date(d.dataDocumento),
+      dataDocumento: dataDeInput(d.dataDocumento),
     },
   });
 

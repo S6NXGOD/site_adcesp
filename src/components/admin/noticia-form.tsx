@@ -25,7 +25,7 @@ import {
 } from "@/components/admin/media-uploads";
 import { ImageCropUpload } from "@/components/admin/image-crop-upload";
 import { CategoriasField } from "@/components/admin/categorias-field";
-import { cn, slugifyUrl, SLUG_MAX } from "@/lib/utils";
+import { cn, slugifyUrl, SLUG_MAX, hojeLocal } from "@/lib/utils";
 import { siteConfig } from "@/lib/site";
 import type { CategoriaDTO } from "@/app/actions/categorias";
 import { criarNoticia, atualizarNoticia } from "@/app/actions/noticias";
@@ -89,8 +89,9 @@ export function NoticiaForm({
   const [categoriaIds, setCategoriaIds] = useState<string[]>(
     noticia?.categoriaIds ?? []
   );
+  // Nova notícia já vem com a data de hoje; o campo continua editável.
   const [dataPublicacao, setDataPublicacao] = useState(
-    noticia?.dataPublicacao ?? new Date().toISOString().slice(0, 10)
+    noticia?.dataPublicacao ?? hojeLocal()
   );
   const [publicado, setPublicado] = useState(noticia?.publicado ?? false);
   const [destaque, setDestaque] = useState(noticia?.destaque ?? false);

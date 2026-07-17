@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { slugifyUrl } from "@/lib/utils";
+import { slugifyUrl, dataDeInput } from "@/lib/utils";
 import { requireAuth, type ActionResult } from "@/lib/action-helpers";
 
 const MAX_SLIDE = 5;
@@ -63,7 +63,7 @@ function parse(formData: FormData): { data?: Parsed; error?: string } {
       resumo,
       conteudo,
       imagemCapa: imagemCapa || null,
-      dataPublicacao: dataRaw ? new Date(dataRaw) : new Date(),
+      dataPublicacao: dataRaw ? dataDeInput(dataRaw) : new Date(),
       publicado,
       destaque,
       galeria: jsonArray<string>(formData.get("galeria")),

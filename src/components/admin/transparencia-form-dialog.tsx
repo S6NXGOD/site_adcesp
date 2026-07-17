@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UploadField } from "@/components/admin/upload-field";
+import { paraInputDate, hojeLocal } from "@/lib/utils";
 import {
   criarDocumento,
   atualizarDocumento,
@@ -110,8 +111,8 @@ export function TransparenciaFormDialog({ doc }: { doc?: Documento }) {
               type="date"
               defaultValue={
                 doc
-                  ? new Date(doc.dataDocumento).toISOString().slice(0, 10)
-                  : new Date().toISOString().slice(0, 10)
+                  ? paraInputDate(doc.dataDocumento)
+                  : hojeLocal()
               }
               required
             />
