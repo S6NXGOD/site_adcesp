@@ -92,10 +92,24 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-slate-800 py-4">
-        <p className="container text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} {siteConfig.name} —{" "}
-          {siteConfig.fullName}. Todos os direitos reservados.
-        </p>
+        <div className="container flex flex-col items-center gap-1 text-center text-xs text-slate-500">
+          <p>
+            © {new Date().getFullYear()} {siteConfig.name} —{" "}
+            {siteConfig.fullName}. Todos os direitos reservados.
+          </p>
+          <p>
+            Site e sistema desenvolvidos por{" "}
+            <a
+              href="https://www.instagram.com/fluviodev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-400 transition-colors hover:text-white"
+            >
+              Fluvio Softwares
+            </a>{" "}
+            — especialista em sites e sistemas para sindicatos.
+          </p>
+        </div>
       </div>
     </footer>
   );
