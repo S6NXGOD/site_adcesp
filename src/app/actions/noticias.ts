@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/utils";
+import { slugifyUrl } from "@/lib/utils";
 import { requireAuth, type ActionResult } from "@/lib/action-helpers";
 
 const MAX_SLIDE = 5;
@@ -59,7 +59,7 @@ function parse(formData: FormData): { data?: Parsed; error?: string } {
   return {
     data: {
       titulo,
-      slug: slugify(slugInput || titulo),
+      slug: slugifyUrl(slugInput || titulo),
       resumo,
       conteudo,
       imagemCapa: imagemCapa || null,

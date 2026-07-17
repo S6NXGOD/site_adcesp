@@ -19,13 +19,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { TiptapEditor } from "@/components/admin/tiptap-editor";
 import {
-  ImageUpload,
   GaleriaUpload,
   DocumentosUpload,
   type DocumentoAnexo,
 } from "@/components/admin/media-uploads";
+import { ImageCropUpload } from "@/components/admin/image-crop-upload";
 import { CategoriasField } from "@/components/admin/categorias-field";
-import { cn, slugify } from "@/lib/utils";
+import { cn, slugifyUrl, SLUG_MAX } from "@/lib/utils";
+import { siteConfig } from "@/lib/site";
 import type { CategoriaDTO } from "@/app/actions/categorias";
 import { criarNoticia, atualizarNoticia } from "@/app/actions/noticias";
 
@@ -96,8 +97,14 @@ export function NoticiaForm({
 
   function onTituloChange(v: string) {
     setTitulo(v);
-    if (!slugEditado) setSlug(slugify(v));
+    if (!slugEditado) setSlug(slugifyUrl(v));
   }
+
+  // Slug efetivo: é ele que o servidor vai gravar (mesma normalização).
+  const slugFinal = slugifyUrl(slug || titulo);
+  const slugLongo = slugFinal.length > SLUG_MAX;
+  // Sem o protocolo, para o preview ficar curto e legível.
+  const siteUrl = siteConfig.url.replace(/^https?:\/\//, "");
 
   function submit() {
     const fd = new FormData();
@@ -163,21 +170,40 @@ export function NoticiaForm({
                 />
               </div>
               <div>
-                <Label htmlFor="slug">Slug (URL)</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="slug">Endereço da notícia (URL)</Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setSlugEditado(true);
+                  }}
+                  placeholder="gerado-a-partir-do-titulo"
+                />
+
+                {/* Preview do link final, já normalizado pelo servidor */}
+                <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1 rounded-md bg-slate-50 px-2.5 py-1.5">
                   <span className="text-xs text-muted-foreground">
-                    /noticias/
+                    {siteUrl}/noticias/
                   </span>
-                  <Input
-                    id="slug"
-                    value={slug}
-                    onChange={(e) => {
-                      setSlug(e.target.value);
-                      setSlugEditado(true);
-                    }}
-                    placeholder="gerado-a-partir-do-titulo"
-                  />
+                  <span className="break-all text-xs font-medium text-primary">
+                    {slugFinal || "..."}
+                  </span>
                 </div>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {slugLongo ? (
+                    <span className="text-amber-600">
+                      {slugFinal.length} caracteres — links longos são cortados
+                      no Google. Encurte para até {SLUG_MAX}.
+                    </span>
+                  ) : (
+                    <>
+                      {slugFinal.length}/{SLUG_MAX} caracteres. Gerado do título
+                      (sem palavras como “de”, “para”, “dos”). Edite se quiser.
+                    </>
+                  )}
+                </p>
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
                 <UserRound className="h-4 w-4" />
@@ -208,7 +234,7 @@ export function NoticiaForm({
 
           <Section
             title="Galeria de fotos"
-            description="Envie várias fotos de uma vez e reordene com as setas."
+            description="Envie várias fotos de uma vez e reordene com as setas. Recomendado: 1600 × 1200 px (4:3) ou maior — as fotos são exibidas em quadrado na matéria. Imagens acima de 1920 px são reduzidas automaticamente."
           >
             <GaleriaUpload value={galeria} onChange={setGaleria} />
           </Section>
@@ -314,7 +340,13 @@ export function NoticiaForm({
           </Section>
 
           <Section title="Imagem de destaque">
-            <ImageUpload value={imagemCapa} onChange={setImagemCapa} />
+            <ImageCropUpload
+              label="Imagem de destaque"
+              value={imagemCapa}
+              onChange={setImagemCapa}
+              aspect={1200 / 630}
+              recomendacao="Recomendado: 1200 × 630 px (1.91:1) — mesmo formato usado no compartilhamento do WhatsApp."
+            />
           </Section>
 
           <Section title="Categorias">

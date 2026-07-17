@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:deploy": "prisma db push && prisma db seed",
+    "img:otimizar": "tsx scripts/otimizar-imagens.ts",
     "db:studio": "prisma studio"
   },
   "prisma": {

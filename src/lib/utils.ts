@@ -18,6 +18,46 @@ export function slugify(text: string): string {
     .replace(/-+/g, "-");
 }
 
+/**
+ * Palavras sem valor semântico para SEO — descartadas ao encurtar o slug.
+ * Não removemos se isso esvaziar o slug (ver `slugifyUrl`).
+ */
+const STOPWORDS = new Set([
+  "a", "ao", "aos", "as", "à", "às", "com", "como", "da", "das", "de", "do",
+  "dos", "e", "em", "na", "nas", "no", "nos", "o", "os", "ou", "para", "pela",
+  "pelas", "pelo", "pelos", "por", "que", "se", "sem", "sob", "sobre", "um",
+  "uma", "uns", "umas", "num", "numa", "the", "of",
+]);
+
+/** Tamanho alvo de um slug de URL. Acima disso o Google trunca na SERP. */
+export const SLUG_MAX = 60;
+
+/**
+ * Slug para URLs públicas: como o `slugify`, mas remove stopwords e corta em
+ * até `max` caracteres **sem partir palavras** — evita URLs quilométricas.
+ *
+ * Usado só na geração de novos slugs; os já existentes ficam intactos.
+ */
+export function slugifyUrl(text: string, max = SLUG_MAX): string {
+  const base = slugify(text);
+  if (!base) return "";
+
+  const palavras = base.split("-").filter(Boolean);
+  const uteis = palavras.filter((p) => !STOPWORDS.has(p));
+  // Se só sobraram stopwords (ex.: "A Casa"), mantém as originais.
+  const fonte = uteis.length > 0 ? uteis : palavras;
+
+  const out: string[] = [];
+  for (const p of fonte) {
+    if (out.length > 0 && [...out, p].join("-").length > max) break;
+    out.push(p);
+  }
+
+  // Uma única palavra maior que o limite: corta no limite.
+  const slug = out.join("-") || fonte[0].slice(0, max);
+  return slug.replace(/^-+|-+$/g, "");
+}
+
 /** Formata data para pt-BR (dd/mm/aaaa). */
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;

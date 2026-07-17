@@ -24,13 +24,6 @@ import { formatDate } from "@/lib/utils";
 
 export const revalidate = 300; // ISR a cada 5 min
 
-const galeria = [
-  "https://placehold.co/400x300/0d3b66/ffffff?text=Assembleia",
-  "https://placehold.co/400x300/1b998b/ffffff?text=Congresso",
-  "https://placehold.co/400x300/f4a261/ffffff?text=Posse",
-  "https://placehold.co/400x300/0d3b66/ffffff?text=Mobilizacao",
-];
-
 export default async function HomePage() {
   const [carrossel, noticias, eventos, pagina, videos] = await Promise.all([
     getCarrossel(5),
@@ -261,30 +254,6 @@ export default async function HomePage() {
             Nenhum evento agendado no momento.
           </p>
         )}
-      </section>
-
-      {/* GALERIA DE FOTOS */}
-      <section className="bg-slate-50 py-16">
-        <div className="container">
-          <h2 className="mb-8 text-3xl font-bold text-slate-900">
-            Galeria de Fotos
-          </h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {galeria.map((src, i) => (
-              <div
-                key={i}
-                className="aspect-[4/3] overflow-hidden rounded-lg border bg-white"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={`Foto da galeria ${i + 1}`}
-                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* CTA FILIAÇÃO */}

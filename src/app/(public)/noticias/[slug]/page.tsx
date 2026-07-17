@@ -12,6 +12,7 @@ import {
 import { ShareButton } from "@/components/public/share-button";
 import { Button } from "@/components/ui/button";
 import { getNoticiaBySlug } from "@/lib/queries";
+import { siteConfig } from "@/lib/site";
 import { formatDateLong } from "@/lib/utils";
 
 type Props = { params: { slug: string } };
@@ -21,15 +22,35 @@ type DocumentoAnexo = { url: string; nome: string; tipo?: string };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const noticia = await getNoticiaBySlug(params.slug);
   if (!noticia) return { title: "Notícia não encontrada" };
+
+  // A capa é servida em WebP (/api/files/...), mas o WhatsApp falha
+  // silenciosamente com WebP em previews. A rota /api/og devolve a mesma
+  // imagem em JPEG 1200×630, que é o que os crawlers renderizam.
+  const ogPath = noticia.imagemCapa?.replace("/api/files/", "/api/og/");
+  const imagens = ogPath
+    ? [{ url: ogPath, width: 1200, height: 630, alt: noticia.titulo }]
+    : [];
+
   return {
     title: noticia.titulo,
     description: noticia.resumo,
     openGraph: {
       title: noticia.titulo,
       description: noticia.resumo,
-      images: noticia.imagemCapa ? [noticia.imagemCapa] : [],
+      images: imagens,
       type: "article",
+      publishedTime: new Date(noticia.dataPublicacao).toISOString(),
+      url: `/noticias/${noticia.slug}`,
+      siteName: siteConfig.name,
+      locale: "pt_BR",
     },
+    twitter: {
+      card: "summary_large_image",
+      title: noticia.titulo,
+      description: noticia.resumo,
+      images: imagens.map((i) => i.url),
+    },
+    alternates: { canonical: `/noticias/${noticia.slug}` },
   };
 }
 
