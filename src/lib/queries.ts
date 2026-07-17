@@ -133,6 +133,57 @@ export function getNoticiaBySlug(slug: string) {
   );
 }
 
+/**
+ * Notícias sugeridas no fim de uma matéria ("Confira também").
+ *
+ * Prioriza o mesmo segmento (categoria). Se não houver o bastante — ou se a
+ * notícia não tiver categoria —, completa com as últimas publicadas, para a
+ * seção nunca aparecer vazia ou pela metade.
+ */
+export function getNoticiasRelacionadas(
+  slugAtual: string,
+  categoriaIds: string[],
+  limit = 3
+) {
+  return safe(
+    async () => {
+      const include = {
+        categorias: { select: { id: true, nome: true, cor: true } },
+      };
+      const base = { publicado: true, slug: { not: slugAtual } };
+
+      const mesmoSegmento =
+        categoriaIds.length > 0
+          ? await prisma.noticia.findMany({
+              where: { ...base, categorias: { some: { id: { in: categoriaIds } } } },
+              orderBy: { dataPublicacao: "desc" },
+              take: limit,
+              include,
+            })
+          : [];
+
+      if (mesmoSegmento.length >= limit) {
+        return { itens: mesmoSegmento, mesmoSegmento: true };
+      }
+
+      // Completa com as mais recentes, sem repetir as que já entraram.
+      const jaIncluidas = mesmoSegmento.map((n) => n.id);
+      const complemento = await prisma.noticia.findMany({
+        where: { ...base, id: { notIn: jaIncluidas } },
+        orderBy: { dataPublicacao: "desc" },
+        take: limit - mesmoSegmento.length,
+        include,
+      });
+
+      return {
+        itens: [...mesmoSegmento, ...complemento],
+        mesmoSegmento: mesmoSegmento.length > 0,
+      };
+    },
+    { itens: [], mesmoSegmento: false }
+  );
+}
+
 // --------------------------- SAIU NA IMPRENSA ---------------------------
 
 /** Clippings publicados (página pública /saiu-na-imprensa). */

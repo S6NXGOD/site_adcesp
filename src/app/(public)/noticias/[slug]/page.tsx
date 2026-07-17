@@ -10,8 +10,9 @@ import {
   Images,
 } from "lucide-react";
 import { ShareButton } from "@/components/public/share-button";
+import { NoticiasRelacionadas } from "@/components/public/noticias-relacionadas";
 import { Button } from "@/components/ui/button";
-import { getNoticiaBySlug } from "@/lib/queries";
+import { getNoticiaBySlug, getNoticiasRelacionadas } from "@/lib/queries";
 import { siteConfig } from "@/lib/site";
 import { formatDateLong } from "@/lib/utils";
 
@@ -61,6 +62,11 @@ export default async function NoticiaPage({ params }: Props) {
   const galeria = (noticia.galeria as unknown as string[]) ?? [];
   const documentos = (noticia.documentos as unknown as DocumentoAnexo[]) ?? [];
 
+  const relacionadas = await getNoticiasRelacionadas(
+    noticia.slug,
+    noticia.categorias.map((c) => c.id)
+  );
+
   return (
     <article>
       {/* Cabeçalho colorido */}
@@ -73,7 +79,7 @@ export default async function NoticiaPage({ params }: Props) {
             >
               <ArrowLeft className="h-4 w-4" /> Voltar para Notícias
             </Link>
-            <ShareButton title={noticia.titulo} />
+            <ShareButton title={noticia.titulo} resumo={noticia.resumo} />
           </div>
 
           {/* Categorias */}
@@ -202,6 +208,12 @@ export default async function NoticiaPage({ params }: Props) {
           </Button>
         </div>
       </div>
+
+      <NoticiasRelacionadas
+        itens={relacionadas.itens}
+        mesmoSegmento={relacionadas.mesmoSegmento}
+        categoria={noticia.categorias[0]?.nome}
+      />
     </article>
   );
 }
