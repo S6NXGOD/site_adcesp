@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Prestações de contas e encaminhamentos de assembleias da ADCESP. Acesso público aos documentos da entidade.",
 };
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function TransparenciaPage() {
   const docs = await getDocumentosTransparencia();

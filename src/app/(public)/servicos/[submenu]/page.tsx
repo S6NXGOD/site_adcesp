@@ -41,9 +41,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export function generateStaticParams() {
-  return Object.keys(servicoSlugToTipo).map((submenu) => ({ submenu }));
-}
+// Dinâmica de propósito: o conteúdo vem do CMS e o build do Railway não
+// alcança o banco — se fosse prerenderizada, voltaria ao texto padrão a cada
+// deploy, descartando o que a diretoria editou.
+export const dynamic = "force-dynamic";
 
 export default async function ServicoPage({ params }: Props) {
   const tipo = servicoSlugToTipo[params.submenu];

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "Estrutura de Coordenação Estadual e Coordenações Regionais da ADCESP nos campi da UESPI.",
 };
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export default async function CoordenacoesPage() {
   const coordenacoes = await getCoordenacoes();

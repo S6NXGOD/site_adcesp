@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     "Matérias sobre a ADCESP e os docentes da UESPI publicadas em veículos de comunicação.",
 };
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
 
 export default async function SaiuNaImprensaPage() {
   const clippings = await getClippingsPublicados();

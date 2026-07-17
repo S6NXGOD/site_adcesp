@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Info } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageTitle } from "@/components/admin/page-title";
 import { NoticiaRowActions } from "@/components/admin/noticia-row-actions";
@@ -75,9 +75,22 @@ export default async function AdminNoticiasPage({
         </div>
         <div className="rounded-xl border bg-white p-3 text-center shadow-sm">
           <p className="text-2xl font-bold text-amber-500">{destaques}/5</p>
-          <p className="text-xs text-muted-foreground">No carrossel</p>
+          <p className="text-xs text-muted-foreground">Fixadas no carrossel</p>
         </div>
       </div>
+
+      {/* Explica o comportamento automático quando nada foi fixado */}
+      {publicadas > 0 && destaques === 0 && (
+        <div className="mb-5 flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            Nenhuma notícia fixada — o carrossel da home está mostrando
+            automaticamente as últimas publicadas <strong>com capa</strong>. Use
+            a estrela <Star className="inline h-3 w-3 fill-current" /> para fixar
+            uma notícia no topo.
+          </p>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="mb-5">
@@ -125,7 +138,12 @@ export default async function AdminNoticiasPage({
                   </Badge>
                   {n.destaque && (
                     <Badge variant="warning">
-                      <Star className="mr-1 h-3 w-3 fill-current" /> Carrossel
+                      <Star className="mr-1 h-3 w-3 fill-current" /> Fixada
+                    </Badge>
+                  )}
+                  {n.publicado && !n.imagemCapa && (
+                    <Badge className="border-transparent bg-slate-100 text-slate-600">
+                      Sem capa — fora do carrossel
                     </Badge>
                   )}
                 </div>

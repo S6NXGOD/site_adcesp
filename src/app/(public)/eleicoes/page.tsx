@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "Histórico das eleições da ADCESP por biênio: editais, regulamentos, comissão eleitoral, chapas e resultados.",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type Calendario = { data: string; evento: string }[];
 type VotoChapa = {

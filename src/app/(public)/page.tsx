@@ -22,7 +22,7 @@ import {
 } from "@/lib/queries";
 import { formatDate } from "@/lib/utils";
 
-export const revalidate = 300; // ISR a cada 5 min
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [carrossel, noticias, eventos, pagina, videos] = await Promise.all([

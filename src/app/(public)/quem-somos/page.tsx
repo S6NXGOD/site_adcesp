@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Conheça a história e a trajetória da ADCESP — Seção Sindical dos Docentes da UESPI.",
 };
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export default async function QuemSomosPage() {
   const pagina = await getPaginaInstitucional();

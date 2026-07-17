@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Vídeos da ADCESP — Seção Sindical dos Docentes da UESPI: eventos, atos e materiais informativos.",
 };
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
 
 export default async function VideosPage() {
   const videos = await getVideos();

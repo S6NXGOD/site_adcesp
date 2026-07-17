@@ -16,16 +16,37 @@ async function safe<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 // --------------------------- NOTÍCIAS ---------------------------
 
-/** Notícias do carrossel da home: publicadas + em destaque, máx. 5 (FIFO). */
+/**
+ * Notícias do carrossel da home.
+ *
+ * Regra: se a diretoria curou destaques, o carrossel mostra exatamente eles
+ * (máx. 5, mais recente primeiro). Se NINGUÉM marcou nada, cai para as últimas
+ * publicadas que tenham capa — assim a home nunca fica com o hero genérico só
+ * porque o destaque é opt-in. Ao marcar a primeira notícia, a curadoria manual
+ * volta a mandar.
+ */
 export function getCarrossel(limit = 5) {
   return safe(
-    () =>
-      prisma.noticia.findMany({
+    async () => {
+      const include = {
+        categorias: { select: { id: true, nome: true, cor: true } },
+      };
+
+      const destaques = await prisma.noticia.findMany({
         where: { publicado: true, destaque: true },
         orderBy: { destaqueEm: "desc" },
         take: limit,
-        include: { categorias: { select: { id: true, nome: true, cor: true } } },
-      }),
+        include,
+      });
+      if (destaques.length > 0) return destaques;
+
+      return prisma.noticia.findMany({
+        where: { publicado: true, imagemCapa: { not: null } },
+        orderBy: { dataPublicacao: "desc" },
+        take: limit,
+        include,
+      });
+    },
     []
   );
 }

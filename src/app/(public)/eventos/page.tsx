@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     "Agenda de assembleias, congressos e atividades sindicais da ADCESP.",
 };
 
-export const revalidate = 180;
+export const dynamic = "force-dynamic";
 
 export default async function EventosPage() {
   const eventos = await getEventos();

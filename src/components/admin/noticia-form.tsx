@@ -324,8 +324,14 @@ export function NoticiaForm({
                 </span>
               </button>
               <p className="text-xs text-muted-foreground">
-                Máx. 5 no carrossel da home. Ao ativar a 6ª, a mais antiga sai
-                automaticamente. Requer imagem de destaque.
+                Fixa esta notícia no carrossel do topo da home (máx. 5 — ao
+                ativar a 6ª, a mais antiga sai). Requer imagem de destaque.
+                <br />
+                <strong className="text-slate-600">
+                  Não é obrigatório:
+                </strong>{" "}
+                sem nenhuma fixada, o carrossel mostra sozinho as últimas
+                notícias com capa.
               </p>
 
               <div>
