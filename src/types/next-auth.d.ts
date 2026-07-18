@@ -23,5 +23,7 @@ declare module "next-auth/jwt" {
     id: string;
     role: Role;
     modulos?: string[];
+    /** Epoch (ms) da última revalidação do papel/módulos no banco. */
+    refreshedAt?: number;
   }
 }
